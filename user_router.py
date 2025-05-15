@@ -51,7 +51,7 @@ async def quest(message: Message, state: FSMContext, bot : Bot):
         data = await state.get_data()
         category = data.get('category')
 
-        await bot.send_document(chat_id=GROUP_ID,document=message.document.file_id, caption=f'Категория {category}\nЗадание от {user}\n id {user_id}')
+        await bot.send_document(chat_id=GROUP_ID,document=message.document.file_id, caption=f'Категория {category}\nЗадание от {user}\n id {user_id}',parse_mode='HTML')
         await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.")
         return
     
@@ -104,11 +104,12 @@ async def yes_photo(callback: CallbackQuery, state: FSMContext, bot : Bot):
             user = f'<a href="tg://user?id={callback.from_user.id}">{callback.from_user.first_name}</a>'
         user_id = callback.from_user.id
         if len(photos) == 1:
-            await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user}\n id {user_id}')
+            await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user}\n id {user_id}',parse_mode='HTML')
         else:
             media = [InputMediaPhoto(media=msg) for msg in photos]
-            media[0].caption = f'Категория {category}\nЗадание от {user}\n id {user_id}'
+            
             await bot.send_media_group(chat_id=GROUP_ID, media=media)
+            await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user}\n id {user_id}',parse_mode='HTML')
 
         await state.clear()
 
@@ -128,11 +129,12 @@ async def text(message: Message, state: FSMContext, bot : Bot):
     user_id = message.from_user.id
     await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.")
     if len(photos) == 1:
-        await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user}\n id {user_id}\n Текст:{message.text}')
+        await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст:{message.text}',parse_mode='HTML')
     else:
         media = [InputMediaPhoto(media=msg) for msg in photos]
-        media[0].caption = f'Категория {category}\nЗадание от {user}\n id {user_id}\n Текст:{message.text}'
+        
         await bot.send_media_group(chat_id=GROUP_ID, media=media)
+        await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст:{message.text}',parse_mode='HTML')
 
     await state.clear()
 
@@ -153,7 +155,7 @@ async def yes_text(callback: CallbackQuery, state: FSMContext, bot : Bot):
         else:
             user = f'<a href="tg://user?id={callback.from_user.id}">{callback.from_user.first_name}</a>'
         user_id = callback.from_user.id
-        await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст:{text}')
+        await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст:{text}',parse_mode='HTML')
         
         
 
@@ -175,7 +177,12 @@ async def photo(message: Message, state: FSMContext, bot : Bot):
         group_id = message.media_group_id
         file_id = message.photo[-1].file_id
         media_buffer[group_id].append(file_id)
-        
+        if message.from_user.username:
+            user = f'@{message.from_user.username}'
+        else:
+            user = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+
+
         if group_id in media_group_locks:
             return
         
@@ -186,12 +193,14 @@ async def photo(message: Message, state: FSMContext, bot : Bot):
         media_group_locks.pop(group_id, None)
         
         
+        
         media = [InputMediaPhoto(media=msg) for msg in all_photos]
-        media[0].caption = f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст: {text}'
+       
         await bot.send_media_group(chat_id=GROUP_ID, media=media)
+        await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст: {text}',parse_mode='HTML')
         await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.") 
     else:
         file_id = message.photo[-1].file_id
         await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.")
-        await bot.send_photo(chat_id=GROUP_ID, photo=file_id, caption=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст: {text}')
+        await bot.send_photo(chat_id=GROUP_ID, photo=file_id, caption=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст: {text}',parse_mode='HTML')
     await state.clear()
