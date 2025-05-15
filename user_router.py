@@ -41,16 +41,17 @@ async def category(callback: CallbackQuery, state: FSMContext):
 
 @router.message(User.quest)
 async def quest(message: Message, state: FSMContext, bot : Bot):
-    user_name = f'@{message.from_user.username}'
-
-    user_link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+    if message.from_user.username:
+        user = f'@{message.from_user.username}'
+    else:
+        user = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
     user_id = message.from_user.id
 
     if message.document:
         data = await state.get_data()
         category = data.get('category')
 
-        await bot.send_document(chat_id=GROUP_ID,document=message.document.file_id, caption=f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}')
+        await bot.send_document(chat_id=GROUP_ID,document=message.document.file_id, caption=f'Категория {category}\nЗадание от {user}\n id {user_id}')
         await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.")
         return
     
@@ -97,15 +98,16 @@ async def yes_photo(callback: CallbackQuery, state: FSMContext, bot : Bot):
         category = data.get('category')
         
         photos = data.get('media')
-        user_name = f'@{callback.from_user.username}'
-
-        user_link = f'<a href="tg://user?id={callback.from_user.id}">{callback.from_user.first_name}</a>'
+        if callback.from_user.username:
+            user = f'@{callback.from_user.username}'
+        else:
+            user = f'<a href="tg://user?id={callback.from_user.id}">{callback.from_user.first_name}</a>'
         user_id = callback.from_user.id
         if len(photos) == 1:
-            await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}')
+            await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user}\n id {user_id}')
         else:
             media = [InputMediaPhoto(media=msg) for msg in photos]
-            media[0].caption = f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}'
+            media[0].caption = f'Категория {category}\nЗадание от {user}\n id {user_id}'
             await bot.send_media_group(chat_id=GROUP_ID, media=media)
 
         await state.clear()
@@ -129,7 +131,7 @@ async def text(message: Message, state: FSMContext, bot : Bot):
         await bot.send_photo(chat_id=GROUP_ID, photo=photos[0], caption=f'Категория {category}\nЗадание от {user}\n id {user_id}\n Текст:{message.text}')
     else:
         media = [InputMediaPhoto(media=msg) for msg in photos]
-        media[0].caption = f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}\n Текст:{message.text}'
+        media[0].caption = f'Категория {category}\nЗадание от {user}\n id {user_id}\n Текст:{message.text}'
         await bot.send_media_group(chat_id=GROUP_ID, media=media)
 
     await state.clear()
@@ -146,10 +148,12 @@ async def yes_text(callback: CallbackQuery, state: FSMContext, bot : Bot):
         data = await state.get_data()
         category = data.get('category')
         text = data.get('text')
-        user_name = f'@{callback.from_user.username}'
-        user_link = f'<a href="tg://user?id={callback.from_user.id}">{callback.from_user.first_name}</a>'
+        if callback.from_user.username:
+            user = f'@{callback.from_user.username}'
+        else:
+            user = f'<a href="tg://user?id={callback.from_user.id}">{callback.from_user.first_name}</a>'
         user_id = callback.from_user.id
-        await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}\nТекст:{text}')
+        await bot.send_message(chat_id=GROUP_ID, text=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст:{text}')
         
         
 
@@ -160,8 +164,10 @@ async def photo(message: Message, state: FSMContext, bot : Bot):
     data = await state.get_data()
     category = data.get('category')
     text = data.get('text')
-    user_name = f'@{message.from_user.username}'
-    user_link = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
+    if message.from_user.username:
+        user = f'@{message.from_user.username}'
+    else:
+        user = f'<a href="tg://user?id={message.from_user.id}">{message.from_user.first_name}</a>'
     user_id = message.from_user.id
     
 
@@ -181,11 +187,11 @@ async def photo(message: Message, state: FSMContext, bot : Bot):
         
         
         media = [InputMediaPhoto(media=msg) for msg in all_photos]
-        media[0].caption = f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}\nТекст: {text}'
+        media[0].caption = f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст: {text}'
         await bot.send_media_group(chat_id=GROUP_ID, media=media)
         await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.") 
     else:
         file_id = message.photo[-1].file_id
         await message.answer(text="✅ Задание получено! Скоро с вами свяжется наш специалист.")
-        await bot.send_photo(chat_id=GROUP_ID, photo=file_id, caption=f'Категория {category}\nЗадание от {user_name or user_link}\n id {user_id}\nТекст: {text}')
+        await bot.send_photo(chat_id=GROUP_ID, photo=file_id, caption=f'Категория {category}\nЗадание от {user}\n id {user_id}\nТекст: {text}')
     await state.clear()
